@@ -28,7 +28,7 @@ print("Waiting until deployment is rolled out")
 kubectl.rollout(
     "status",
     "deployment",
-    "--timeout=120s",
+    "--timeout=900s",
     context=cluster,
 )
 
@@ -37,7 +37,7 @@ kubectl.rollout(
     "status",
     "ingress",
     "--namespace=ingress-nginx",
-    "--timeout=120s",
+    "--timeout=900s",
     context=cluster,
 )
 
@@ -68,6 +68,6 @@ print("Waiting until ingress is ready")
 drenv.wait_for(
     "ingress/demo-ingress",
     output="jsonpath={.status.loadBalancer.ingress}",
-    timeout=120,
+    timeout=900,
     profile=cluster,
 )

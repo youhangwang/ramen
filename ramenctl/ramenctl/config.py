@@ -52,7 +52,7 @@ def wait_for_ramen_hub_operator(hub, args):
         "status",
         "deploy/ramen-hub-operator",
         f"--namespace={args.ramen_namespace}",
-        "--timeout=180s",
+        "--timeout=900s",
         context=hub,
         log=command.debug,
     )
@@ -124,7 +124,7 @@ def wait_for_secret_propagation(hub, clusters, args):
             f"policy/{policy}",
             output="jsonpath={.status}",
             namespace=cluster,
-            timeout=30,
+            timeout=900,
             profile=hub,
             log=command.debug,
         )
@@ -132,7 +132,7 @@ def wait_for_secret_propagation(hub, clusters, args):
         kubectl.wait(
             f"policy/{policy}",
             "--for=jsonpath={.status.compliant}=Compliant",
-            "--timeout=30s",
+            "--timeout=900s",
             f"--namespace={cluster}",
             context=hub,
             log=command.debug,
@@ -146,7 +146,7 @@ def wait_for_dr_clusters(hub, clusters, args):
             f"drcluster/{name}",
             output="jsonpath={.status.phase}",
             namespace=args.ramen_namespace,
-            timeout=180,
+            timeout=900,
             profile=hub,
             log=command.debug,
         )
@@ -155,6 +155,7 @@ def wait_for_dr_clusters(hub, clusters, args):
     kubectl.wait(
         "drcluster",
         "--all",
+        "--timeout=900s",
         "--for=jsonpath={.status.phase}=Available",
         f"--namespace={args.ramen_namespace}",
         context=hub,
@@ -167,6 +168,7 @@ def wait_for_dr_policy(hub, args):
     kubectl.wait(
         "drpolicy/dr-policy",
         "--for=condition=Validated",
+        "--timeout=900s",
         f"--namespace={args.ramen_namespace}",
         context=hub,
         log=command.debug,

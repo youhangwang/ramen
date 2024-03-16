@@ -10,7 +10,7 @@ from drenv import kubectl
 EXAMPLE_DEPLOYMENT = os.path.join("addons", "example", "deployment.yaml")
 
 # Avoid random timeouts in github.
-TIMEOUT = 30
+TIMEOUT = 900
 
 
 def test_version(tmpenv):

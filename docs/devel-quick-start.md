@@ -71,6 +71,10 @@ enough resources:
    This create a virtual environment in `~/.venv/ramen` and a symbolic
    link `venv` for activating the environment. To activate the
    environment use:
+   
+   ```
+   source venv
+   ```
 
 That's all! You are ready to submit your first pull request!
 

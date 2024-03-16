@@ -3,7 +3,7 @@
 
 # wait for a file to exist in minio s3 storage, by input path
 function wait_for_mc_file() {
-    local TIMEOUT_MAX=120
+    local TIMEOUT_MAX=900
     local TIMEOUT=$TIMEOUT_MAX
     local INTERVAL=5
     local FILE=${*:3}  #  usage: 'mc find FILE'

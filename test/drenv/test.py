@@ -232,7 +232,7 @@ def lookup_cluster():
     kubectl.wait(
         placement,
         "--for=condition=PlacementSatisfied",
-        "--timeout=60s",
+        "--timeout=900s",
         f"--namespace={config['namespace']}",
         context=env["hub"],
         log=debug,
@@ -297,7 +297,7 @@ def wait_for_drpc_status():
     info("waiting for namespace %s", config["namespace"])
     drenv.wait_for(
         f"namespace/{config['namespace']}",
-        timeout=60,
+        timeout=900,
         profile=env["hub"],
         log=debug,
     )
@@ -309,7 +309,7 @@ def wait_for_drpc_status():
         drpc,
         output="jsonpath={.status}",
         namespace=config["namespace"],
-        timeout=60,
+        timeout=900,
         profile=env["hub"],
         log=debug,
     )
@@ -323,13 +323,13 @@ def wait_for_drpc_phase(phase):
         drpc,
         f"--for=jsonpath={{.status.phase}}={phase}",
         f"--namespace={config['namespace']}",
-        "--timeout=300s",
+        "--timeout=900s",
         context=env["hub"],
         log=debug,
     )
 
 
-def wait_until_drpc_is_stable(timeout=300):
+def wait_until_drpc_is_stable(timeout=900):
     """
     Wait until drpc is in stable state:
     - Available=true

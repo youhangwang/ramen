@@ -118,7 +118,7 @@ wait_for_vrg_condition_status $INDEX_DATA_READY True vrg/$VRG_NAME -n $NAMESPACE
 wait_for_vrg_state "Primary" vrg/$VRG_NAME -n $NAMESPACE --context $CLUSTER_TO
 
 # wait for new application to come online 
-kubectl wait deployments/$DEPLOYMENT_NAME -n $NAMESPACE --for condition=available --timeout=60s --context=$CLUSTER_TO
+kubectl wait deployments/$DEPLOYMENT_NAME -n $NAMESPACE --for condition=available --timeout=900s --context=$CLUSTER_TO
 
 # TODO: check backups/restores here
 

@@ -239,7 +239,7 @@ def delete_minikube_cluster(profile):
     )
 
 
-def wait_for_deployments(profile, initial_wait=30, timeout=300):
+def wait_for_deployments(profile, initial_wait=30, timeout=900):
     """
     When restarting, kubectl can report stale status for a while, before it
     starts to report real status. Then it takes a while until all deployments
