@@ -109,7 +109,7 @@ def deploy():
     )
     info("Deploying subscription based application")
     kubectl.apply(
-        f"--kustomize={config['repo']}/deployment-k8s-regional-rbd/subscription?ref={config['branch']}",
+        f"--kustomize={config['repo']}/subscription/deployment-k8s-regional-rbd?ref={config['branch']}",
         "--timeout=900s",
         context=env["hub"],
         log=debug,
