@@ -102,13 +102,15 @@ def deploy():
     """
     info("Deploying channel")
     kubectl.apply(
-        f"--kustomize={config['repo']}/channel?ref={config['branch']}&timeout=900s",
+        f"--kustomize={config['repo']}/channel?ref={config['branch']}",
+        "--timeout=900s",
         context=env["hub"],
         log=debug,
     )
     info("Deploying subscription based application")
     kubectl.apply(
-        f"--kustomize={config['repo']}/subscription?ref={config['branch']}&timeout=900s",
+        f"--kustomize={config['repo']}/subscription?ref={config['branch']}",
+        "--timeout=900s",
         context=env["hub"],
         log=debug,
     )
@@ -121,6 +123,7 @@ def undeploy():
     info("Undeploying channel")
     kubectl.delete(
         f"--kustomize={config['repo']}/channel?ref={config['branch']}&timeout=900s",
+        "--timeout=900s",
         "--ignore-not-found",
         context=env["hub"],
         log=debug,
@@ -128,6 +131,7 @@ def undeploy():
     info("Undeploying subscription based application")
     kubectl.delete(
         f"--kustomize={config['repo']}/subscription?ref={config['branch']}&timeout=900s",
+        "--timeout=900s",
         "--ignore-not-found",
         context=env["hub"],
         log=debug,
