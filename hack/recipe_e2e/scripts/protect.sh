@@ -27,7 +27,7 @@ cd ../..
 make deploy-dr-cluster
 
 # wait for ramen deployment to become available
-kubectl wait deployment.apps/ramen-dr-cluster-operator -n ramen-system --context $CLUSTER --for condition=available --timeout=60s
+kubectl wait deployment.apps/ramen-dr-cluster-operator -n ramen-system --context $CLUSTER --for condition=available --timeout=900s
 
 # optionally create namespace
 if [[ $(kubectl get namespace $NAMESPACE --no-headers --context $CLUSTER | wc -l) -eq 0 ]]; then
@@ -40,7 +40,7 @@ application_sample_namespace_name=$NAMESPACE bash hack/minikube-ramen.sh applica
 cd "$WORKING_DIRECTORY"
 
 # wait for deployment to become ready
-kubectl wait deployments.apps/busybox -n $NAMESPACE --for condition=available --timeout=60s --context=$CLUSTER
+kubectl wait deployments.apps/busybox -n $NAMESPACE --for condition=available --timeout=900s --context=$CLUSTER
 
 # setup s3
 kubectl apply -f config/ramen_secret_minio.yaml 

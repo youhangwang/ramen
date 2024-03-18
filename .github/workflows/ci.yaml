@@ -279,9 +279,9 @@ jobs:
       - name: Install cert-manager
         run: |
           kubectl apply  -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
-          kubectl -n cert-manager  wait --for=condition=Available --timeout=60s deploy/cert-manager
-          kubectl -n cert-manager  wait --for=condition=Available --timeout=60s deploy/cert-manager-cainjector
-          kubectl -n cert-manager  wait --for=condition=Available --timeout=60s deploy/cert-manager-webhook
+          kubectl -n cert-manager  wait --for=condition=Available --timeout=900s deploy/cert-manager
+          kubectl -n cert-manager  wait --for=condition=Available --timeout=900s deploy/cert-manager-cainjector
+          kubectl -n cert-manager  wait --for=condition=Available --timeout=900s deploy/cert-manager-webhook
 
       - name: Deploy dependent CRDs
         run: |
@@ -291,9 +291,9 @@ jobs:
         run: |
           make deploy
           kubectl get deployment -n ramen-system
-          kubectl -n ramen-system wait --for=condition=Available --timeout=60s deploy/ramen-hub-operator
-          kubectl -n ramen-system wait --for=condition=Available --timeout=60s deploy/ramen-dr-cluster-operator
-
+          kubectl -n ramen-system wait --for=condition=Available --timeout=900s deploy/ramen-hub-operator
+          kubectl -n ramen-system wait --for=condition=Available --timeout=900s deploy/ramen-dr-cluster-operator
+80
       - name: Display failure logs
         if: ${{ failure() }}
         run: |

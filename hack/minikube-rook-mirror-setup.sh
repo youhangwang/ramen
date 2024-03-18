@@ -72,7 +72,7 @@ spec:
   count: 1
 EOF
 
-#kubectl wait deployments -n rook-ceph --for condition=available rook-ceph-rbd-mirror-a --timeout=60s --context="${PRIMARY_CLUSTER}"
+#kubectl wait deployments -n rook-ceph --for condition=available rook-ceph-rbd-mirror-a --timeout=900s --context="${PRIMARY_CLUSTER}"
 
 wait_for_condition "OK" kubectl get cephblockpools.ceph.rook.io replicapool --context="${PRIMARY_CLUSTER}" -nrook-ceph -o jsonpath='{.status.mirroringStatus.summary.daemon_health}'
 echo RBD mirror daemon health OK
