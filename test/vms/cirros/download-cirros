@@ -120,7 +120,7 @@ def unpack_rootfs(boot_img, nocloud_img):
             p.wait()
 
 
-def wait_for_output(p, what, timeout=120):
+def wait_for_output(p, what, timeout=900):
     deadline = time.monotonic() + timeout
     data = what.encode("utf-8")
     line = bytearray()

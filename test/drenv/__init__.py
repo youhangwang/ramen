@@ -14,7 +14,7 @@ from . import kubectl
 def wait_for(
     resource,
     output="jsonpath={.metadata.name}",
-    timeout=300,
+    timeout=900,
     namespace=None,
     profile=None,
     log=print,

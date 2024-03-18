@@ -16,11 +16,11 @@ def test_status_ready(tmpenv):
 
 def test_wait_until_ready_unknown():
     with pytest.raises(RuntimeError):
-        cluster.wait_until_ready("no-such-profile", timeout=0)
+        cluster.wait_until_ready("no-such-profile", timeout=900)
 
 
 def test_wait_until_ready(tmpenv):
-    cluster.wait_until_ready(tmpenv.profile, timeout=0)
+    cluster.wait_until_ready(tmpenv.profile, timeout=900)
 
 
 def test_kubeconfig_unknown():

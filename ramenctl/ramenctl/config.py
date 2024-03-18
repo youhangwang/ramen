@@ -52,7 +52,7 @@ def wait_for_ramen_hub_operator(hub, args):
         "status",
         "deploy/ramen-hub-operator",
         f"--namespace={args.ramen_namespace}",
-        "--timeout=180s",
+        "--timeout=900s",
         context=hub,
         log=command.debug,
     )
@@ -127,7 +127,7 @@ def wait_for_secret_propagation(hub, clusters, args):
             f"policy/{policy}",
             output="jsonpath={.status}",
             namespace=cluster,
-            timeout=30,
+            timeout=900,
             profile=hub,
             log=command.debug,
         )
@@ -135,7 +135,7 @@ def wait_for_secret_propagation(hub, clusters, args):
         kubectl.wait(
             f"policy/{policy}",
             "--for=jsonpath={.status.compliant}=Compliant",
-            "--timeout=30s",
+            "--timeout=900s",
             f"--namespace={cluster}",
             context=hub,
             log=command.debug,
@@ -148,7 +148,7 @@ def wait_for_dr_clusters(hub, clusters, args):
         drenv.wait_for(
             f"drcluster/{name}",
             output="jsonpath={.status.phase}",
-            timeout=180,
+            timeout=900,
             profile=hub,
             log=command.debug,
         )

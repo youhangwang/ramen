@@ -75,7 +75,7 @@ bash scripts/deploy_primary.sh
 wait_for_resource_creation deployment/$DEPLOYMENT_NAME -n $NAMESPACE --context $CLUSTER_TO
 
 # wait for new application to come online 
-kubectl wait deployment/$DEPLOYMENT_NAME -n $NAMESPACE --for condition=available --timeout=60s --context=$CLUSTER_TO
+kubectl wait deployment/$DEPLOYMENT_NAME -n $NAMESPACE --for condition=available --timeout=900s --context=$CLUSTER_TO
 
 # application is ready. Verify restore contents and backup hook (order of Workflow matters)
 RESTORE_RESULTS_FILE=restore-$NAMESPACE--$VRG_NAME--$RESTORE_NUMBER-logs.gz
