@@ -4,7 +4,7 @@
 ---
 repo: https://github.com/youhangwang/ocm-ramen-samples.git
 path: subscription/deployment-k8s-regional-cephfs
-branch: cephfs
+branch: main
 name: deployment-cephfs
 namespace: deployment-cephfs
 dr_policy: dr-policy

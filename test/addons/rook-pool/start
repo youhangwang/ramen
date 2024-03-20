@@ -15,6 +15,9 @@ def deploy(cluster):
     kubectl.apply(
         "--filename=replica-pool.yaml",
         "--filename=storage-class.yaml",
+        "--filename=cephfs.yaml",
+        "--filename=snapshotclass.yaml",
+        "--filename=storage-class-fs.yaml",
         context=cluster,
     )
 
