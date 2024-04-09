@@ -21,3 +21,6 @@ patchesJson6902:
         path: /spec/network
         value:
           provider: host
+      - op: replace
+        path: /spec/cephVersion/image
+        value: quay.ceph.io/ceph-ci/ceph:0cd602b1d11a1cc56441fbb1faec9e7a9b1cd7d5-centos9

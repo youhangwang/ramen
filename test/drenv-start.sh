@@ -3,3 +3,7 @@ do echo "----------------restart------------------" ;
 done ; 
 echo succeed
 
+while ! ./cephfscg/vgs.sh ;
+do echo "----------------restart post scripts------------------" ; 
+done ; 
+echo succeed
