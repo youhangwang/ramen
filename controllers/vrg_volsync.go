@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/backube/volsync/api/v1alpha1"
 	"github.com/go-logr/logr"
 	ramendrv1alpha1 "github.com/ramendr/ramen/api/v1alpha1"
 	"github.com/ramendr/ramen/controllers/cephfscg"
@@ -126,7 +127,7 @@ func (v *VRGInstance) reconcileVolSyncAsPrimary(finalSyncPrepared *bool) (requeu
 	return requeue
 }
 
-//nolint:gocognit,funlen,cyclop
+//nolint:gocognit,funlen,cyclop,gocyclo,nestif
 func (v *VRGInstance) reconcilePVCAsVolSyncPrimary(pvc corev1.PersistentVolumeClaim) (requeue bool) {
 	newProtectedPVC := &ramendrv1alpha1.ProtectedPVC{
 		Name:               pvc.Name,
@@ -165,6 +166,27 @@ func (v *VRGInstance) reconcilePVCAsVolSyncPrimary(pvc corev1.PersistentVolumeCl
 	if err != nil {
 		return true
 	} else if pvcInCephfsCg {
+		latestRDImage, err := v.volSyncHandler.GetRDLatestImage(rsSpec.ProtectedPVC.Name, rsSpec.ProtectedPVC.Namespace)
+		if err != nil {
+			return true
+		}
+
+		if latestRDImage != nil {
+			// Before creating a new RGS, make sure any LocalReplicationDestination for this PVC is cleaned up first
+			// DeleteRD only delete LRD&LRS here, as only the lrd&lrs have vrg owner and also belongs a CG
+			err = v.volSyncHandler.DeleteLocalRDAndRS(
+				&v1alpha1.ReplicationDestination{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      rsSpec.ProtectedPVC.Name,
+						Namespace: rsSpec.ProtectedPVC.Namespace,
+					},
+				},
+			)
+			if err != nil {
+				return true
+			}
+		}
+
 		volumeGroupSnapshotClassName, err := util.GetVolumeGroupSnapshotClassFromPVCsStorageClass(
 			v.ctx, v.reconciler.Client, v.instance.Spec.Async.VolumeGroupSnapshotClassSelector,
 			v.instance.Spec.CephFSConsistencyGroupSelector, v.instance.Namespace, v.log,

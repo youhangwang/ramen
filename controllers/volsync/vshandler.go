@@ -750,7 +750,7 @@ func (v *VSHandler) DeleteRD(pvcName string) error {
 
 		if rd.GetName() == getReplicationDestinationName(pvcName) {
 			if v.IsCopyMethodDirect() {
-				err := v.deleteLocalRDAndRS(&rd)
+				err := v.DeleteLocalRDAndRS(&rd)
 				if err != nil {
 					return err
 				}
@@ -768,8 +768,8 @@ func (v *VSHandler) DeleteRD(pvcName string) error {
 }
 
 //nolint:gocognit
-func (v *VSHandler) deleteLocalRDAndRS(rd *volsyncv1alpha1.ReplicationDestination) error {
-	latestRDImage, err := v.getRDLatestImage(rd.GetName(), rd.GetNamespace())
+func (v *VSHandler) DeleteLocalRDAndRS(rd *volsyncv1alpha1.ReplicationDestination) error {
+	latestRDImage, err := v.GetRDLatestImage(rd.GetName(), rd.GetNamespace())
 	if err != nil {
 		return err
 	}
@@ -941,7 +941,7 @@ func (v *VSHandler) listByOwner(list client.ObjectList) error {
 
 func (v *VSHandler) EnsurePVCfromRD(rdSpec ramendrv1alpha1.VolSyncReplicationDestinationSpec, failoverAction bool,
 ) error {
-	latestImage, err := v.getRDLatestImage(rdSpec.ProtectedPVC.Name, rdSpec.ProtectedPVC.Namespace)
+	latestImage, err := v.GetRDLatestImage(rdSpec.ProtectedPVC.Name, rdSpec.ProtectedPVC.Namespace)
 	if err != nil {
 		return err
 	}
@@ -1603,7 +1603,7 @@ func isRSLastSyncTimeReady(rsStatus *volsyncv1alpha1.ReplicationSourceStatus) bo
 	return false
 }
 
-func (v *VSHandler) getRDLatestImage(pvcName, pvcNamespace string) (*corev1.TypedLocalObjectReference, error) {
+func (v *VSHandler) GetRDLatestImage(pvcName, pvcNamespace string) (*corev1.TypedLocalObjectReference, error) {
 	rd, err := v.getRD(pvcName, pvcNamespace)
 	if err != nil || rd == nil {
 		return nil, err
@@ -1619,7 +1619,7 @@ func (v *VSHandler) getRDLatestImage(pvcName, pvcNamespace string) (*corev1.Type
 
 // Returns true if at least one sync has completed (we'll consider this "data protected")
 func (v *VSHandler) IsRDDataProtected(pvcName, pvcNamespace string) (bool, error) {
-	latestImage, err := v.getRDLatestImage(pvcName, pvcNamespace)
+	latestImage, err := v.GetRDLatestImage(pvcName, pvcNamespace)
 	if err != nil {
 		return false, err
 	}
@@ -1943,7 +1943,7 @@ func (v *VSHandler) deleteLocalRD(lrdName, lrdNamespace string) error {
 
 func (v *VSHandler) setupLocalRS(rd *volsyncv1alpha1.ReplicationDestination,
 ) (*corev1.PersistentVolumeClaim, error) {
-	latestImage, err := v.getRDLatestImage(rd.GetName(), rd.GetNamespace())
+	latestImage, err := v.GetRDLatestImage(rd.GetName(), rd.GetNamespace())
 	if err != nil {
 		return nil, err
 	}

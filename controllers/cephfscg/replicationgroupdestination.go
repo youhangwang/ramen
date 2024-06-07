@@ -81,6 +81,7 @@ func (m *rgdMachine) Conditions() *[]metav1.Condition {
 	return &m.ReplicationGroupDestination.Status.Conditions
 }
 
+//nolint:cyclop
 func (m *rgdMachine) Synchronize(ctx context.Context) (mover.Result, error) {
 	createdRDs := []*volsyncv1alpha1.ReplicationDestination{}
 	rds := []*corev1.ObjectReference{}
@@ -91,6 +92,13 @@ func (m *rgdMachine) Synchronize(ctx context.Context) (mover.Result, error) {
 		rd, err := m.ReconcileRD(rdSpec, m.ReplicationGroupDestination.Status.LastSyncStartTime.String())
 		if err != nil {
 			return mover.InProgress(), fmt.Errorf("failed to create replication destination: %w", err)
+		}
+
+		if rd == nil {
+			m.Logger.Info(fmt.Sprintf("ReplicationDestination for %s is not ready. We'll retry...",
+				rdSpec.ProtectedPVC.Name))
+
+			return mover.InProgress(), nil
 		}
 
 		createdRDs = append(createdRDs, rd)
