@@ -23,6 +23,7 @@ import (
 
 const (
 	ManualStringAnnotaion        = "ramendr.openshift.io/manual-string"
+	SkipDeleteAnnotaion          = "ramendr.openshift.io/do-not-delete"
 	RGDOwnerLabel                = "ramendr.openshift.io/rgd"
 	CleanupLabelKey              = "volsync.backube/cleanup"
 	RGSOwnerLabel         string = "ramendr.openshift.io/rgs"
@@ -292,6 +293,11 @@ func CleanExpiredRDImages(ctx context.Context,
 	}
 
 	for _, vs := range volumeSnapshotList.Items {
+		if _, ok := vs.Annotations[SkipDeleteAnnotaion]; ok {
+			// get SkipDeleteAnnotaion, do not delete the volume snapshot
+			continue
+		}
+
 		ManualString, ok := vs.Annotations[ManualStringAnnotaion]
 		if ok && ManualString != rgd.Status.LastSyncStartTime.String() {
 			if err := k8sClient.Delete(ctx, &vsv1.VolumeSnapshot{

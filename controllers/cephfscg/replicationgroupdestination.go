@@ -135,15 +135,16 @@ func (m *rgdMachine) Synchronize(ctx context.Context) (mover.Result, error) {
 
 	m.ReplicationGroupDestination.Status.LatestImages = latestImages
 
-	if err := util.CleanExpiredRDImages(ctx, m.Client, m.ReplicationGroupDestination); err != nil {
-		return mover.InProgress(), err
-	}
-
 	return mover.Complete(), nil
 }
 
 func (m *rgdMachine) Cleanup(ctx context.Context) (mover.Result, error) {
-	// No temp resources created by ReplicationGroupDestination
+	m.Logger.Info("Clean expired RD images")
+
+	if err := util.CleanExpiredRDImages(ctx, m.Client, m.ReplicationGroupDestination); err != nil {
+		return mover.InProgress(), err
+	}
+
 	return mover.Complete(), nil
 }
 
