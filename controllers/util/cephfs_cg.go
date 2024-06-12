@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	volsyncv1alpha1 "github.com/backube/volsync/api/v1alpha1"
+	ramenutils "github.com/backube/volsync/controllers/utils"
 	"github.com/go-logr/logr"
 	groupsnapv1alpha1 "github.com/kubernetes-csi/external-snapshotter/client/v7/apis/volumegroupsnapshot/v1alpha1"
 	vsv1 "github.com/kubernetes-csi/external-snapshotter/client/v7/apis/volumesnapshot/v1"
@@ -22,11 +23,14 @@ import (
 )
 
 const (
-	ManualStringAnnotaion        = "ramendr.openshift.io/manual-string"
-	SkipDeleteAnnotaion          = "ramendr.openshift.io/do-not-delete"
-	RGDOwnerLabel                = "ramendr.openshift.io/rgd"
-	CleanupLabelKey              = "volsync.backube/cleanup"
-	RGSOwnerLabel         string = "ramendr.openshift.io/rgs"
+	ManualStringAnnotaion = "ramendr.openshift.io/manual-string"
+
+	// do not delete the vs in a vgs, only for testing
+	SkipDeleteAnnotaion = "rgd.ramendr.openshift.io/do-not-delete"
+
+	RGDOwnerLabel          = "ramendr.openshift.io/rgd"
+	CleanupLabelKey        = "volsync.backube/cleanup"
+	RGSOwnerLabel   string = "ramendr.openshift.io/rgs"
 )
 
 func IsFSCGSupport(mgr manager.Manager) (bool, error) {
@@ -266,6 +270,8 @@ func DeferDeleteImage(ctx context.Context,
 		}
 
 		delete(labels, CleanupLabelKey)
+		labels[ramenutils.DoNotDeleteLabelKey] = "true"
+
 		labels[RGDOwnerLabel] = rgdName
 		volumeSnapshot.SetLabels(labels)
 
