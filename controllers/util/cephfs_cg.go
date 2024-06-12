@@ -305,7 +305,8 @@ func CleanExpiredRDImages(ctx context.Context,
 		}
 
 		ManualString, ok := vs.Annotations[ManualStringAnnotaion]
-		if ok && ManualString != rgd.Status.LastSyncStartTime.String() {
+		if ok && rgd.Status.LastSyncStartTime != nil &&
+			ManualString != rgd.Status.LastSyncStartTime.String() {
 			if err := k8sClient.Delete(ctx, &vsv1.VolumeSnapshot{
 				ObjectMeta: metav1.ObjectMeta{Name: vs.Name, Namespace: vs.Namespace},
 			}); err != nil {

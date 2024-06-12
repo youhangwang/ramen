@@ -9,11 +9,13 @@ import (
 	"github.com/backube/volsync/controllers/mover"
 	"github.com/backube/volsync/controllers/statemachine"
 	"github.com/go-logr/logr"
+	vsv1 "github.com/kubernetes-csi/external-snapshotter/client/v7/apis/volumesnapshot/v1"
 	ramendrv1alpha1 "github.com/ramendr/ramen/api/v1alpha1"
 	"github.com/ramendr/ramen/controllers/util"
 	"github.com/ramendr/ramen/controllers/volsync"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -131,6 +133,17 @@ func (m *rgdMachine) Synchronize(ctx context.Context) (mover.Result, error) {
 		}
 	}
 
+	readytoUse, err := m.CheckImagesReadyToUse(ctx, latestImages, m.ReplicationGroupDestination.Namespace)
+	if err != nil {
+		m.Logger.Error(err, "Failed to check if images are ready to use")
+		return mover.InProgress(), err
+	}
+
+	if !readytoUse {
+		m.Logger.Error(err, "Images are not ready to use")
+		return mover.InProgress(), nil
+	}
+
 	m.Logger.Info("Set lastest images to ReplicationGroupDestination", "LenofLastestImages", len(latestImages))
 
 	m.ReplicationGroupDestination.Status.LatestImages = latestImages
@@ -151,6 +164,33 @@ func (m *rgdMachine) Cleanup(ctx context.Context) (mover.Result, error) {
 func (m *rgdMachine) SetOutOfSync(bool)                     {}
 func (m *rgdMachine) IncMissedIntervals()                   {}
 func (m *rgdMachine) ObserveSyncDuration(dur time.Duration) {}
+
+func (m *rgdMachine) CheckImagesReadyToUse(
+	ctx context.Context,
+	latestImages map[string]*corev1.TypedLocalObjectReference,
+	namespace string,
+) (bool, error) {
+	for pvcName := range latestImages {
+		latestImage := latestImages[pvcName]
+		if latestImage == nil {
+			return false, nil
+		}
+
+		volumeSnapshot := &vsv1.VolumeSnapshot{}
+		if err := m.Client.Get(ctx,
+			types.NamespacedName{Name: latestImage.Name, Namespace: namespace},
+			volumeSnapshot,
+		); err != nil {
+			return false, err
+		}
+
+		if volumeSnapshot.Status.ReadyToUse != nil && !*volumeSnapshot.Status.ReadyToUse {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
 
 //nolint:cyclop
 func (m *rgdMachine) ReconcileRD(
