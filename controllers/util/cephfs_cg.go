@@ -23,8 +23,6 @@ import (
 )
 
 const (
-	ManualStringAnnotaion = "ramendr.openshift.io/manual-string"
-
 	// do not delete the vs in a vgs, only for testing
 	SkipDeleteAnnotaion = "rgd.ramendr.openshift.io/do-not-delete"
 
@@ -275,13 +273,6 @@ func DeferDeleteImage(ctx context.Context,
 		labels[RGDOwnerLabel] = rgdName
 		volumeSnapshot.SetLabels(labels)
 
-		annotations := volumeSnapshot.GetAnnotations()
-		if annotations == nil {
-			annotations = make(map[string]string)
-		}
-		annotations[ManualStringAnnotaion] = manual
-		volumeSnapshot.SetAnnotations(annotations)
-
 		return k8sClient.Update(ctx, volumeSnapshot)
 	})
 }
@@ -304,9 +295,7 @@ func CleanExpiredRDImages(ctx context.Context,
 			continue
 		}
 
-		ManualString, ok := vs.Annotations[ManualStringAnnotaion]
-		if ok && rgd.Status.LastSyncStartTime != nil &&
-			ManualString != rgd.Status.LastSyncStartTime.String() {
+		if !vsInRGD(vs, rgd) {
 			if err := k8sClient.Delete(ctx, &vsv1.VolumeSnapshot{
 				ObjectMeta: metav1.ObjectMeta{Name: vs.Name, Namespace: vs.Namespace},
 			}); err != nil {
@@ -316,4 +305,14 @@ func CleanExpiredRDImages(ctx context.Context,
 	}
 
 	return nil
+}
+
+func vsInRGD(vs vsv1.VolumeSnapshot, rgd *ramendrv1alpha1.ReplicationGroupDestination) bool {
+	for _, image := range rgd.Status.LatestImages {
+		if image.Name == vs.Name {
+			return true
+		}
+	}
+
+	return false
 }

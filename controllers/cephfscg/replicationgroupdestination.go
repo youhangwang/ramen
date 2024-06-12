@@ -83,7 +83,7 @@ func (m *rgdMachine) Conditions() *[]metav1.Condition {
 	return &m.ReplicationGroupDestination.Status.Conditions
 }
 
-//nolint:cyclop
+//nolint:cyclop,funlen
 func (m *rgdMachine) Synchronize(ctx context.Context) (mover.Result, error) {
 	createdRDs := []*volsyncv1alpha1.ReplicationDestination{}
 	rds := []*corev1.ObjectReference{}
@@ -136,11 +136,13 @@ func (m *rgdMachine) Synchronize(ctx context.Context) (mover.Result, error) {
 	readytoUse, err := m.CheckImagesReadyToUse(ctx, latestImages, m.ReplicationGroupDestination.Namespace)
 	if err != nil {
 		m.Logger.Error(err, "Failed to check if images are ready to use")
+
 		return mover.InProgress(), err
 	}
 
 	if !readytoUse {
 		m.Logger.Error(err, "Images are not ready to use")
+
 		return mover.InProgress(), nil
 	}
 
@@ -173,6 +175,8 @@ func (m *rgdMachine) CheckImagesReadyToUse(
 	for pvcName := range latestImages {
 		latestImage := latestImages[pvcName]
 		if latestImage == nil {
+			m.Logger.Info("Image is nil to check")
+
 			return false, nil
 		}
 
@@ -181,10 +185,15 @@ func (m *rgdMachine) CheckImagesReadyToUse(
 			types.NamespacedName{Name: latestImage.Name, Namespace: namespace},
 			volumeSnapshot,
 		); err != nil {
+			m.Logger.Error(err, "Failed to get volume snapshot")
+
 			return false, err
 		}
 
-		if volumeSnapshot.Status.ReadyToUse != nil && !*volumeSnapshot.Status.ReadyToUse {
+		if volumeSnapshot.Status.ReadyToUse == nil ||
+			(volumeSnapshot.Status.ReadyToUse != nil && !*volumeSnapshot.Status.ReadyToUse) {
+			m.Logger.Info("Volume snapshot is not ready to use", "VolumeSnapshot", volumeSnapshot.Name)
+
 			return false, nil
 		}
 	}
