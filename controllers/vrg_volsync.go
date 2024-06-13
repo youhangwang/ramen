@@ -8,10 +8,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/backube/volsync/api/v1alpha1"
 	"github.com/go-logr/logr"
 	ramendrv1alpha1 "github.com/ramendr/ramen/api/v1alpha1"
-	"github.com/ramendr/ramen/controllers/cephfscg"
 	"github.com/ramendr/ramen/controllers/util"
 	"github.com/ramendr/ramen/controllers/volsync"
 	corev1 "k8s.io/api/core/v1"
@@ -40,7 +38,7 @@ func (v *VRGInstance) restorePVsAndPVCsForVolSync() (int, error) {
 		}
 
 		if pvcInCephfsCg {
-			err = v.volSyncHandler.EnsurePVCfromRGD(rdSpec, failoverAction)
+			err = v.cephfsCGHandler.EnsurePVCfromRGD(rdSpec, failoverAction)
 		} else {
 			// Create a PVC from snapshot or for direct copy
 			err = v.volSyncHandler.EnsurePVCfromRD(rdSpec, failoverAction)
@@ -166,41 +164,17 @@ func (v *VRGInstance) reconcilePVCAsVolSyncPrimary(pvc corev1.PersistentVolumeCl
 	if err != nil {
 		return true
 	} else if pvcInCephfsCg {
-		latestRDImage, err := v.volSyncHandler.GetRDLatestImage(rsSpec.ProtectedPVC.Name, rsSpec.ProtectedPVC.Namespace)
-		if err != nil {
-			return true
-		}
-
-		if latestRDImage != nil {
-			// Before creating a new RGS, make sure any LocalReplicationDestination for this PVC is cleaned up first
-			// DeleteRD only delete LRD&LRS here, as only the lrd&lrs have vrg owner and also belongs a CG
-			err = v.volSyncHandler.DeleteLocalRDAndRS(
-				&v1alpha1.ReplicationDestination{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      rsSpec.ProtectedPVC.Name,
-						Namespace: rsSpec.ProtectedPVC.Namespace,
-					},
-				},
-			)
-			if err != nil {
-				return true
-			}
-		}
-
-		volumeGroupSnapshotClassName, err := util.GetVolumeGroupSnapshotClassFromPVCsStorageClass(
-			v.ctx, v.reconciler.Client, v.instance.Spec.Async.VolumeGroupSnapshotClassSelector,
-			v.instance.Spec.CephFSConsistencyGroupSelector, v.instance.Namespace, v.log,
+		// Before creating a new RGS, make sure any LocalReplicationDestination for this PVC is cleaned up first
+		// DeleteRD only delete LRD&LRS here, as only the lrd&lrs have vrg owner and also belongs a CG
+		err = v.cephfsCGHandler.DeleteLocalRDAndRS(
+			ramendrv1alpha1.VolSyncReplicationDestinationSpec(rsSpec),
 		)
 		if err != nil {
 			return true
 		}
 
-		rgs, finalSyncComplete, err := cephfscg.CreateOrUpdateReplicationGroupSource(
-			v.ctx, v.reconciler.Client,
-			v.instance.Name, v.instance.Namespace,
-			volumeGroupSnapshotClassName, v.instance.Spec.CephFSConsistencyGroupSelector,
-			v.instance.Spec.Async.SchedulingInterval, v.instance.Spec.RunFinalSync,
-			v.instance,
+		rgs, finalSyncComplete, err := v.cephfsCGHandler.CreateOrUpdateReplicationGroupSource(
+			v.instance.Name, v.instance.Namespace, v.instance.Spec.RunFinalSync,
 		)
 		if err != nil {
 			setVRGConditionTypeVolSyncRepSourceSetupError(&protectedPVC.Conditions, v.instance.Generation,
@@ -269,39 +243,11 @@ func (v *VRGInstance) reconcileVolSyncAsSecondary() bool {
 	return v.reconcileRDSpecForDeletionOrReplication()
 }
 
-func (v *VRGInstance) GetRDInCG() ([]ramendrv1alpha1.VolSyncReplicationDestinationSpec, error) {
-	rdSpecs := []ramendrv1alpha1.VolSyncReplicationDestinationSpec{}
-
-	if v.instance.Spec.CephFSConsistencyGroupSelector == nil {
-		return rdSpecs, nil
-	}
-
-	if len(v.instance.Spec.VolSync.RDSpec) == 0 {
-		return rdSpecs, nil
-	}
-
-	for _, rdSpec := range v.instance.Spec.VolSync.RDSpec {
-		pvcInCephfsCg, err := util.CheckIfPVCMatchLabel(
-			rdSpec.ProtectedPVC.Labels, v.instance.Spec.CephFSConsistencyGroupSelector)
-		if err != nil {
-			v.log.Error(err, "Failed to check if pvc label match consistency group selector")
-
-			return nil, err
-		}
-
-		if pvcInCephfsCg {
-			rdSpecs = append(rdSpecs, rdSpec)
-		}
-	}
-
-	return rdSpecs, nil
-}
-
 //nolint:gocognit,funlen,cyclop
 func (v *VRGInstance) reconcileRDSpecForDeletionOrReplication() bool {
 	requeue := false
 
-	rdinCG, err := v.GetRDInCG()
+	rdinCG, err := v.cephfsCGHandler.GetRDInCG()
 	if err != nil {
 		v.log.Error(err, "Failed to get RD in CG")
 
@@ -313,10 +259,8 @@ func (v *VRGInstance) reconcileRDSpecForDeletionOrReplication() bool {
 	if len(rdinCG) > 0 {
 		v.log.Info("Create ReplicationGroupDestination with RDSpecs", "RDSpecs", rdinCG)
 
-		replicationGroupDestination, err := cephfscg.CreateOrUpdateReplicationGroupDestination(
-			v.ctx, v.reconciler.Client, v.instance.Name,
-			v.instance.Namespace, v.instance.Spec.Async.VolumeSnapshotClassSelector,
-			rdinCG, v.instance,
+		replicationGroupDestination, err := v.cephfsCGHandler.CreateOrUpdateReplicationGroupDestination(
+			v.instance.Name, v.instance.Namespace, rdinCG,
 		)
 		if err != nil {
 			v.log.Error(err, "Failed to create ReplicationGroupDestination")

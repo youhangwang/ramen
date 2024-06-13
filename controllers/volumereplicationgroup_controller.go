@@ -15,6 +15,7 @@ import (
 
 	volrep "github.com/csi-addons/kubernetes-csi-addons/apis/replication.storage/v1alpha1"
 	"github.com/google/uuid"
+	"github.com/ramendr/ramen/controllers/cephfscg"
 	"github.com/ramendr/ramen/controllers/kubeobjects"
 	"github.com/ramendr/ramen/controllers/kubeobjects/velero"
 	"golang.org/x/exp/maps" // TODO replace with "maps" in go1.21+
@@ -387,6 +388,8 @@ func filterPVC(reader client.Reader, pvc *corev1.PersistentVolumeClaim, log logr
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
+//
+//nolint:funlen
 func (r *VolumeReplicationGroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("VolumeReplicationGroup", req.NamespacedName, "rid", uuid.New())
 
@@ -433,6 +436,13 @@ func (r *VolumeReplicationGroupReconciler) Reconcile(ctx context.Context, req ct
 		v.instance.Spec.Async, cephFSCSIDriverNameOrDefault(v.ramenConfig),
 		volSyncDestinationCopyMethodOrDefault(v.ramenConfig), adminNamespaceVRG)
 
+	v.cephfsCGHandler, err = cephfscg.NewVSCGHandler(
+		ctx, r.Client, v.instance, v.volSyncHandler, v.log,
+	)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to create cephfsCGHandler: %w", err)
+	}
+
 	if v.instance.Status.ProtectedPVCs == nil {
 		v.instance.Status.ProtectedPVCs = []ramendrv1alpha1.ProtectedPVC{}
 	}
@@ -472,6 +482,7 @@ type VRGInstance struct {
 	vrcUpdated           bool
 	namespacedName       string
 	volSyncHandler       *volsync.VSHandler
+	cephfsCGHandler      cephfscg.VSCGHandler
 	objectStorers        map[string]cachedObjectStorer
 	s3StoreAccessors     []s3StoreAccessor
 	result               ctrl.Result
