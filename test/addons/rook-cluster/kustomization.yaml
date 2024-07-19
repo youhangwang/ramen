@@ -31,4 +31,4 @@ patches:
           maxLogSize: 50M
       - op: replace
         path: /spec/cephVersion/image
-        value: quay.ceph.io/ceph-ci/ceph:main-3acca68-centos-stream9-x86_64-devel
+        value: quay.ceph.io/ceph-ci/ceph:f0f381071253c59ffd89cd9261c6650488fbdece
