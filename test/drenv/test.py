@@ -152,6 +152,8 @@ kind: DRPlacementControl
 metadata:
   name: {config['name']}-drpc
   namespace: {config['namespace']}
+  annotations:
+    drplacementcontrol.ramendr.openshift.io/is-cg-enabled: "true"
   labels:
     app: {config['name']}
 spec:
